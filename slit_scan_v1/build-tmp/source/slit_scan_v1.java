@@ -21,8 +21,8 @@ public class slit_scan_v1 extends PApplet {
 
 
 Capture video;
-int rowHeight = 50;
-int rowDelay = 1;
+int rowHeight = 10;
+float rowDelay = 50;
 
 // HashMap<Integer,PImage> frameBuffer = new HashMap<Integer,PImage>();
 ArrayList<PImage> frameBuffer = new ArrayList<PImage>();
@@ -69,10 +69,10 @@ public void readFrame() {
 int i = 0;
 public void drawImage() {
 	int top = 0;
-	int frameDelayStep = PApplet.parseInt(rowDelay * 60);
+	float frameDelayStep = (rowDelay/1000* frameRate);
 	println(frameDelayStep);
 	
-	if (frameBuffer.size() > frameDelayStep+1) {
+	if (frameBuffer.size() > frameDelayStep*2) {
 		// image(frameBuffer.get(frameBuffer.size()-60), 0,0);
 		// image(frameBuffer.get(20), 0,0);
 	
@@ -103,9 +103,14 @@ public void drawImage() {
 
 		int step = 0;
 		int frameDelay = 0;
-		while (top < height) {
-			frameDelay = (frameDelayStep * step) - 1;
-			image(frameBuffer.get(frameBuffer.size()-1), 0, top);
+		while (top < height-rowHeight) {
+			frameDelay = PApplet.parseInt(frameBuffer.size() - (frameDelayStep * step) - 1);
+			// println("frameDelay: "+frameDelay);
+			if (frameDelay > 0) {
+				PImage frameImage = frameBuffer.get(frameDelay).get(0, top, width, rowHeight);
+
+				image(frameImage, 0, top);
+			}
 
 			step++;
 			top += rowHeight;
