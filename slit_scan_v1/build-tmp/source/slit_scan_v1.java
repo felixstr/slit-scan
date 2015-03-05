@@ -23,9 +23,12 @@ public class slit_scan_v1 extends PApplet {
 Capture video;
 int rowHeight = 10;
 float rowDelay = 50;
+boolean topToBottom = true;
 
-// HashMap<Integer,PImage> frameBuffer = new HashMap<Integer,PImage>();
+int frameNumber = 0;
+
 ArrayList<PImage> frameBuffer = new ArrayList<PImage>();
+// HashMap<Integer, PImage> frameBuffer = new HashMap<Integer, PImage>();
 
 public void setup() {
 	size(640, 480);
@@ -41,96 +44,67 @@ public void draw() {
 
 	if (video.available()) {
 		video.read();
-		
-
-
 	}
 	
 
 	video.loadPixels();
 	readFrame();
-	drawImage();
 
+	pushMatrix();
+		scale(-1, 1);
+		translate(-width, 0);
+		drawImage();	
 
-	// bufferClean();
+	popMatrix();
 
-	// image(video, 0, 0);
-	// if (frameCount > 300) {
-	// 	image(frameBuffer.get(200), 0,0);
-	// } else {
-	// 	image(video, 0, 0);
-	// }
-	// image(video, 0, 0);
+	bufferClean();
 }	
 
 public void readFrame() {
 	frameBuffer.add(video.get());
+	// frameBuffer.put(frameNumber, video.get());
 }
-int i = 0;
+
 public void drawImage() {
 	int top = 0;
 	float frameDelayStep = (rowDelay/1000* frameRate);
-	println(frameDelayStep);
 	
-	if (frameBuffer.size() > frameDelayStep*2) {
-		// image(frameBuffer.get(frameBuffer.size()-60), 0,0);
-		// image(frameBuffer.get(20), 0,0);
 	
-
-
-
-	// Entry<Integer, PImage> lastEntry = frameBuffer.lastEntry();
-	// println(lastEntry);
-	// image(frameBuffer.get(lastEntry), 0,0);
-
-	// // println(frameCount);
-	// int currentFrame = frameNumber;
-	// int newFrame = 0;
-
-	// if (currentFrame > 400) {
-	// 	newFrame = currentFrame-500;
-	// 	if (current) {
-	// 		image(frameBuffer.get(currentFrame), 0,0);
-	// 	} else {
-
-	// 		image(frameBuffer.get(newFrame), 0,0);
-	// 	}
-
-	// 	println("frameCount: "+frameNumber+", frameCount100: "+(newFrame));
-
-	// 	i++;
-	// }
 
 		int step = 0;
 		int frameDelay = 0;
+
 		while (top < height-rowHeight) {
 			frameDelay = PApplet.parseInt(frameBuffer.size() - (frameDelayStep * step) - 1);
 			// println("frameDelay: "+frameDelay);
 			if (frameDelay > 0) {
-				PImage frameImage = frameBuffer.get(frameDelay).get(0, top, width, rowHeight);
+				int imageTop = top;
+				if (!topToBottom) {
+					imageTop = height-top-rowHeight;
+				}
 
-				image(frameImage, 0, top);
+				PImage frameImage = frameBuffer.get(frameDelay).get(0, imageTop, width, rowHeight);
+
+				image(frameImage, 0, imageTop);
 			}
 
 			step++;
 			top += rowHeight;
 		}
 
-	}
+		// println("frameBuffer Size: "+frameBuffer.size()+" frameDelay: "+frameDelay);
+
+
 }
 
 public void bufferClean() {
+	// anzahlrows * delay
+	// for (int i = 0; i < frameBuffer.size(); i++) {
+	// 	if ()
+	// }
+	// println(height/rowHeight);
+	// println(frameBuffer.size());
 
-
-}
-
-boolean current = true;
-public void keyPressed() {
-	switch (key) {
-		case ' ':
-			current = !current;
-		break;
-	}
 }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "slit_scan_v1" };
