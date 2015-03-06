@@ -16,7 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-public class slit_scan_v2 extends PApplet {
+public class slit_scan_v3_kinect extends PApplet {
 
 
 
@@ -25,8 +25,8 @@ public class slit_scan_v2 extends PApplet {
 SimpleOpenNI context;
 
 Capture video;
-int rowHeight = 1;
-float rowDelay = 10;
+int rowHeight = 50;
+float rowDelay = 400;
 boolean topToBottom = true;
 
 int frameNumber = 0;
@@ -35,25 +35,25 @@ HashMap<Integer, PImage> frameBuffer = new HashMap<Integer, PImage>();
 
 public void setup() {
 	size(640*3/2, 480*3/2);
-	
-	video = new Capture(this, 640, 480, 30);
-	video.start();
-	
+
+	// init simpleopenni
+	context = new SimpleOpenNI(this);
+	if (context.isInit() == false) {
+		println("Can't init SimpleOpenNI, maybe the camera is not connected!");
+		exit();
+		return;  
+	}
+	context.setMirror(true);
+	context.enableRGB();
 
 }
 
 public void draw() {
 	background(0);
+	context.update();
 	// image(context.rgbImage(), 0, 0);
 
-	// println(frameCount);
 
-	if (video.available()) {
-		video.read();
-	}
-	
-	video.loadPixels();
-	
 	readFrame();
 
 	pushMatrix();
@@ -68,7 +68,7 @@ public void draw() {
 }	
 
 public void readFrame() {
-	frameBuffer.put(frameNumber, video.get());
+	frameBuffer.put(frameNumber, context.rgbImage().get());
 }
 
 public void drawImage() {
@@ -140,7 +140,7 @@ public void bufferClean(int frameDelay) {
 
 }
   static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "slit_scan_v2" };
+    String[] appletArgs = new String[] { "slit_scan_v3_kinect" };
     if (passedArgs != null) {
       PApplet.main(concat(appletArgs, passedArgs));
     } else {

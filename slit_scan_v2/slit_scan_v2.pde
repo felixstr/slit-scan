@@ -1,5 +1,8 @@
 import processing.video.*;
 import java.util.*;
+import SimpleOpenNI.*;
+
+SimpleOpenNI context;
 
 Capture video;
 int rowHeight = 1;
@@ -12,13 +15,16 @@ HashMap<Integer, PImage> frameBuffer = new HashMap<Integer, PImage>();
 
 void setup() {
 	size(640*3/2, 480*3/2);
-
+	
 	video = new Capture(this, 640, 480, 30);
 	video.start();
+	
+
 }
 
 void draw() {
 	background(0);
+	// image(context.rgbImage(), 0, 0);
 
 	// println(frameCount);
 
@@ -26,8 +32,8 @@ void draw() {
 		video.read();
 	}
 	
-
 	video.loadPixels();
+	
 	readFrame();
 
 	pushMatrix();
@@ -38,6 +44,7 @@ void draw() {
 	popMatrix();
 
 	frameNumber++;
+	
 }	
 
 void readFrame() {
