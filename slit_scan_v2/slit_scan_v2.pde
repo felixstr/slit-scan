@@ -5,8 +5,9 @@ import SimpleOpenNI.*;
 SimpleOpenNI context;
 
 Capture video;
-int rowHeight = 1;
-float rowDelay = 10;
+int rowHeight = 30;
+float rowDelay = 300;
+int frameDelayStep;
 boolean topToBottom = true;
 
 int frameNumber = 0;
@@ -19,6 +20,7 @@ void setup() {
 	video = new Capture(this, 640, 480, 30);
 	video.start();
 	
+	frameDelayStep = int((rowDelay/1000)* frameRate);
 
 }
 
@@ -57,15 +59,12 @@ void drawImage() {
 
 	
 	int top = 0;
-	float frameDelayStep = (rowDelay/1000* frameRate);
-	
-	
-
 	int step = 0;
 	int frameDelay = 0;
 
 	while (top < height) {
 		frameDelay = int(frameNumber - (frameDelayStep * step));
+		
 		// println("frameDelay: "+frameDelay);
 		if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
 			int imageTop = top;
