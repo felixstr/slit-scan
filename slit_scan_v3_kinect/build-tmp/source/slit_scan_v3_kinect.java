@@ -25,8 +25,10 @@ public class slit_scan_v3_kinect extends PApplet {
 SimpleOpenNI context;
 
 Capture video;
-int rowHeight = 50;
-float rowDelay = 400;
+int rowHeight = 3;
+float rowDelay = 80;
+float frameDelayStep;
+
 boolean topToBottom = true;
 
 int frameNumber = 0;
@@ -43,9 +45,11 @@ public void setup() {
 		exit();
 		return;  
 	}
-	context.setMirror(true);
+	context.setMirror(false);
 	context.enableRGB();
 
+	frameDelayStep = (rowDelay/1000)* frameRate;
+	println(frameDelayStep);
 }
 
 public void draw() {
@@ -77,10 +81,6 @@ public void drawImage() {
 
 	
 	int top = 0;
-	float frameDelayStep = (rowDelay/1000* frameRate);
-	
-	
-
 	int step = 0;
 	int frameDelay = 0;
 

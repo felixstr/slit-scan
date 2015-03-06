@@ -25,9 +25,11 @@ public class slit_scan_v2 extends PApplet {
 SimpleOpenNI context;
 
 Capture video;
-int rowHeight = 30;
-float rowDelay = 300;
-int frameDelayStep;
+int rowHeight = 3;
+float rowDelay = 80;
+
+float frameDelayStep;
+
 boolean topToBottom = true;
 
 int frameNumber = 0;
@@ -40,9 +42,8 @@ public void setup() {
 	video = new Capture(this, 640, 480, 30);
 	video.start();
 	
-
-	frameDelayStep = PApplet.parseInt((rowDelay/1000)* frameRate);
-
+	frameDelayStep = (rowDelay/1000)* frameRate;
+	println("frameDelayStep: "+frameDelayStep);
 }
 
 public void draw() {
@@ -77,20 +78,16 @@ public void readFrame() {
 public void drawImage() {
 
 	// image(frameBuffer.get(frameNumber), 0, 0);
-
+	
 	
 	int top = 0;
-	println("frameDelayStep "+frameDelayStep);
-	
-
 	int step = 0;
 	int frameDelay = 0;
 
 	while (top < height) {
-		
-
 		frameDelay = PApplet.parseInt(frameNumber - (frameDelayStep * step));
-		println("frameDelay: "+frameDelay);
+		
+		// println("frameDelay: "+frameDelay);
 		if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
 			int imageTop = top;
 			if (!topToBottom) {
