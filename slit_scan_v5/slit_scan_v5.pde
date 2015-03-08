@@ -3,46 +3,75 @@ import java.util.*;
 import SimpleOpenNI.*;
 
 SimpleOpenNI context;
-
 Capture video;
-int rowHeight = 1;
-float rowDelay = 80;
-
-float frameDelayStep;
-
-boolean topToBottom = false;
 
 int frameNumber = 0;
-
 HashMap<Integer, PImage> frameBuffer = new HashMap<Integer, PImage>();
+
+static final int CAM_INTERN = 0;
+static final int CAM_KINECT = 1;
+static final int CAM_EXTERN = 2;
+
+/**
+* KONFIGURATION
+*/
+int rowHeight = 5; // höhe einer reihe
+int frameDelayStep = 1; // frame verzögerung pro reihe
+boolean topToBottom = true;
+int currentCam = CAM_KINECT;
+
 
 void setup() {
 	size(640*3/2, 480*3/2);
+	frameRate(30);
+
+	switch (currentCam) {
+		case CAM_INTERN: 
+			video = new Capture(this, 640, 480, 30);
+			video.start();
+			break;
+
+		case CAM_KINECT:
+			context = new SimpleOpenNI(this);
+			if (context.isInit() == false) {
+				println("Can't init SimpleOpenNI, maybe the camera is not connected!");
+				exit();
+				return;  
+			}
+			context.setMirror(false);
+			context.enableRGB();
+			break;
+	}	
 	
-	video = new Capture(this, 640, 480, 30);
-	video.start();
-	
-	frameDelayStep = (rowDelay/1000)* frameRate;
 	println("frameDelayStep: "+frameDelayStep);
 }
 
 void draw() {
 	background(0);
-	// image(context.rgbImage(), 0, 0);
 
-	// println(frameCount);
+	switch (currentCam) {
+		case CAM_INTERN: 
+			if (video.available()) {
+				video.read();
+			}
+			
+			video.loadPixels();
+			break;
 
-	if (video.available()) {
-		video.read();
+		case CAM_KINECT:
+			context.update();
+			break;
 	}
 	
-	video.loadPixels();
-	
+	// frame als bild im buffer speichern
 	readFrame();
 
 	pushMatrix();
 		scale(-1.66, 1.66);
+		// scale(-1, 1);
 		translate(-640, 0);
+
+		// bild zeichnen
 		drawImage();	
 
 	popMatrix();
@@ -52,12 +81,18 @@ void draw() {
 }	
 
 void readFrame() {
-	frameBuffer.put(frameNumber, video.get());
+	switch (currentCam) {
+		case CAM_INTERN: 
+			frameBuffer.put(frameNumber, video.get());
+			break;
+
+		case CAM_KINECT:
+			frameBuffer.put(frameNumber, context.rgbImage().get());
+			break;
+	}
 }
 
 void drawImage() {
-
-	// image(frameBuffer.get(frameNumber), 0, 0);
 	
 	
 	int top = 0;
@@ -67,7 +102,6 @@ void drawImage() {
 	while (top < height) {
 		frameDelay = int(frameNumber - (frameDelayStep * step));
 		
-		// println("frameDelay: "+frameDelay);
 		if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
 			int imageTop = top;
 			if (!topToBottom) {
@@ -79,24 +113,16 @@ void drawImage() {
 			image(frameImage, 0, imageTop);
 		}
 
-
-
-		
 		top += rowHeight;
 		step++;
 	}
 
 	bufferClean(frameDelay);
-	
-
-
-	// println("frameBuffer Size: "+frameBuffer.size());
-
 
 }
 
 void bufferClean(int frameDelay) {
-	// anzahlrows * delay
+
 	if (frameBuffer.get(frameDelay-1) != null) {
 		ArrayList<Integer> deleteElements = new ArrayList<Integer>();
 
@@ -106,7 +132,7 @@ void bufferClean(int frameDelay) {
 			Map.Entry mapEntry = (Map.Entry)itr.next();
 			int bufferFrameNumber = (Integer)mapEntry.getKey();
 
-			if (bufferFrameNumber < frameDelay-50) {
+			if (bufferFrameNumber < frameDelay-frameDelayStep) {
 				deleteElements.add(bufferFrameNumber);
 				
 			}
@@ -115,7 +141,6 @@ void bufferClean(int frameDelay) {
 
 		for (int i = 0; i < deleteElements.size(); i++) {
 			frameBuffer.remove(deleteElements.get(i));
-			// println("deleted: "+deleteElements.get(i));
 		}
 	}
 

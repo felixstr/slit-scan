@@ -16,54 +16,82 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-public class slit_scan_v3_kinect extends PApplet {
+public class slit_scan_v5 extends PApplet {
 
 
 
 
 
 SimpleOpenNI context;
-
 Capture video;
-int rowHeight = 5;
-float rowDelay = 50;
-float frameDelayStep;
-
-boolean topToBottom = false;
 
 int frameNumber = 0;
-
 HashMap<Integer, PImage> frameBuffer = new HashMap<Integer, PImage>();
+
+static final int CAM_INTERN = 0;
+static final int CAM_KINECT = 1;
+static final int CAM_EXTERN = 2;
+
+/**
+* KONFIGURATION
+*/
+int rowHeight = 5; // h\u00f6he einer reihe
+int frameDelayStep = 1; // frame verz\u00f6gerung pro reihe
+boolean topToBottom = true;
+int currentCam = CAM_KINECT;
+
 
 public void setup() {
 	size(640*3/2, 480*3/2);
+	frameRate(30);
 
-	// init simpleopenni
-	context = new SimpleOpenNI(this);
-	if (context.isInit() == false) {
-		println("Can't init SimpleOpenNI, maybe the camera is not connected!");
-		exit();
-		return;  
-	}
-	context.setMirror(false);
-	context.enableRGB();
-	
+	switch (currentCam) {
+		case CAM_INTERN: 
+			video = new Capture(this, 640, 480, 30);
+			video.start();
+			break;
 
-	frameDelayStep = (rowDelay/1000)* frameRate;
-	println(frameDelayStep);
+		case CAM_KINECT:
+			context = new SimpleOpenNI(this);
+			if (context.isInit() == false) {
+				println("Can't init SimpleOpenNI, maybe the camera is not connected!");
+				exit();
+				return;  
+			}
+			context.setMirror(false);
+			context.enableRGB();
+			break;
+	}	
 	
+	println("frameDelayStep: "+frameDelayStep);
 }
 
 public void draw() {
 	background(0);
-	context.update();
-	// image(context.rgbImage(), 0, 0);
 
+	switch (currentCam) {
+		case CAM_INTERN: 
+			if (video.available()) {
+				video.read();
+			}
+			
+			video.loadPixels();
+			break;
+
+		case CAM_KINECT:
+			context.update();
+			break;
+	}
+	
+	// frame als bild im buffer speichern
 	readFrame();
 
 	pushMatrix();
 		scale(-1.66f, 1.66f);
+		// scale(-1, 1);
 		translate(-640, 0);
+
+		// bild zeichnen
 		drawImage();	
 
 	popMatrix();
@@ -73,13 +101,19 @@ public void draw() {
 }	
 
 public void readFrame() {
-	frameBuffer.put(frameNumber, context.rgbImage().get());
+	switch (currentCam) {
+		case CAM_INTERN: 
+			frameBuffer.put(frameNumber, video.get());
+			break;
+
+		case CAM_KINECT:
+			frameBuffer.put(frameNumber, context.rgbImage().get());
+			break;
+	}
 }
 
 public void drawImage() {
-
-	// image(frameBuffer.get(frameNumber), 0, 0);
-
+	
 	
 	int top = 0;
 	int step = 0;
@@ -87,7 +121,7 @@ public void drawImage() {
 
 	while (top < height) {
 		frameDelay = PApplet.parseInt(frameNumber - (frameDelayStep * step));
-		// println("frameDelay: "+frameDelay);
+		
 		if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
 			int imageTop = top;
 			if (!topToBottom) {
@@ -99,24 +133,16 @@ public void drawImage() {
 			image(frameImage, 0, imageTop);
 		}
 
-
-
-		
 		top += rowHeight;
 		step++;
 	}
 
 	bufferClean(frameDelay);
-	
-
-
-	// println("frameBuffer Size: "+frameBuffer.size());
-
 
 }
 
 public void bufferClean(int frameDelay) {
-	// anzahlrows * delay
+
 	if (frameBuffer.get(frameDelay-1) != null) {
 		ArrayList<Integer> deleteElements = new ArrayList<Integer>();
 
@@ -126,7 +152,7 @@ public void bufferClean(int frameDelay) {
 			Map.Entry mapEntry = (Map.Entry)itr.next();
 			int bufferFrameNumber = (Integer)mapEntry.getKey();
 
-			if (bufferFrameNumber < frameDelay-50) {
+			if (bufferFrameNumber < frameDelay-frameDelayStep) {
 				deleteElements.add(bufferFrameNumber);
 				
 			}
@@ -135,13 +161,12 @@ public void bufferClean(int frameDelay) {
 
 		for (int i = 0; i < deleteElements.size(); i++) {
 			frameBuffer.remove(deleteElements.get(i));
-			// println("deleted: "+deleteElements.get(i));
 		}
 	}
 
 }
   static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "slit_scan_v3_kinect" };
+    String[] appletArgs = new String[] { "slit_scan_v5" };
     if (passedArgs != null) {
       PApplet.main(concat(appletArgs, passedArgs));
     } else {

@@ -1,68 +1,66 @@
-import processing.core.*; 
-import processing.data.*; 
-import processing.event.*; 
-import processing.opengl.*; 
-
-import processing.video.*; 
-import java.util.*; 
-import SimpleOpenNI.*; 
-
-import java.util.HashMap; 
-import java.util.ArrayList; 
-import java.io.File; 
-import java.io.BufferedReader; 
-import java.io.PrintWriter; 
-import java.io.InputStream; 
-import java.io.OutputStream; 
-import java.io.IOException; 
-
-public class slit_scan_v3_kinect extends PApplet {
-
-
-
-
+import processing.video.*;
+import java.util.*;
+import SimpleOpenNI.*;
 
 SimpleOpenNI context;
 
 Capture video;
-int rowHeight = 5;
-float rowDelay = 50;
+int rowHeight = 100;
+float rowDelay = 1000;
+
 float frameDelayStep;
 
-boolean topToBottom = false;
+boolean topToBottom = true;
 
 int frameNumber = 0;
 
 HashMap<Integer, PImage> frameBuffer = new HashMap<Integer, PImage>();
 
-public void setup() {
+void setup() {
 	size(640*3/2, 480*3/2);
-
-	// init simpleopenni
-	context = new SimpleOpenNI(this);
-	if (context.isInit() == false) {
-		println("Can't init SimpleOpenNI, maybe the camera is not connected!");
-		exit();
-		return;  
-	}
-	context.setMirror(false);
-	context.enableRGB();
 	
+	String[] cameras = Capture.list();
+	// video = new Capture(this, 640, 480, 30);
+	// video.start();
 
+
+	if (cameras.length == 0) {
+    	println("There are no cameras available for capture.");
+    	exit();
+  	} else {
+		println("Available cameras:");
+		for (int i = 0; i < cameras.length; i++) {
+		 	println(cameras[i]);
+		}
+
+		// The camera can be initialized directly using an 
+		// element from the array returned by list():
+		video = new Capture(this, 640, 480, "HDV-VCR", 30);
+		video.start();     
+  } 
+
+
+	
 	frameDelayStep = (rowDelay/1000)* frameRate;
-	println(frameDelayStep);
-	
+	println("frameDelayStep: "+frameDelayStep);
 }
 
-public void draw() {
+void draw() {
 	background(0);
-	context.update();
 	// image(context.rgbImage(), 0, 0);
 
+	// println(frameCount);
+
+	if (video.available()) {
+		video.read();
+	}
+	
+	video.loadPixels();
+	
 	readFrame();
 
 	pushMatrix();
-		scale(-1.66f, 1.66f);
+		scale(-1.66, 1.66);
 		translate(-640, 0);
 		drawImage();	
 
@@ -72,21 +70,22 @@ public void draw() {
 	
 }	
 
-public void readFrame() {
-	frameBuffer.put(frameNumber, context.rgbImage().get());
+void readFrame() {
+	frameBuffer.put(frameNumber, video.get());
 }
 
-public void drawImage() {
+void drawImage() {
 
 	// image(frameBuffer.get(frameNumber), 0, 0);
-
+	
 	
 	int top = 0;
 	int step = 0;
 	int frameDelay = 0;
 
 	while (top < height) {
-		frameDelay = PApplet.parseInt(frameNumber - (frameDelayStep * step));
+		frameDelay = int(frameNumber - (frameDelayStep * step));
+		
 		// println("frameDelay: "+frameDelay);
 		if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
 			int imageTop = top;
@@ -115,7 +114,7 @@ public void drawImage() {
 
 }
 
-public void bufferClean(int frameDelay) {
+void bufferClean(int frameDelay) {
 	// anzahlrows * delay
 	if (frameBuffer.get(frameDelay-1) != null) {
 		ArrayList<Integer> deleteElements = new ArrayList<Integer>();
@@ -139,13 +138,4 @@ public void bufferClean(int frameDelay) {
 		}
 	}
 
-}
-  static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "slit_scan_v3_kinect" };
-    if (passedArgs != null) {
-      PApplet.main(concat(appletArgs, passedArgs));
-    } else {
-      PApplet.main(appletArgs);
-    }
-  }
 }

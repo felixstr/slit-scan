@@ -5,11 +5,11 @@ import SimpleOpenNI.*;
 SimpleOpenNI context;
 
 Capture video;
-int rowHeight = 3;
-float rowDelay = 80;
+int rowHeight = 5;
+float rowDelay = 50;
 float frameDelayStep;
 
-boolean topToBottom = true;
+boolean topToBottom = false;
 
 int frameNumber = 0;
 
@@ -27,16 +27,17 @@ void setup() {
 	}
 	context.setMirror(false);
 	context.enableRGB();
+	
 
 	frameDelayStep = (rowDelay/1000)* frameRate;
 	println(frameDelayStep);
+	
 }
 
 void draw() {
 	background(0);
 	context.update();
 	// image(context.rgbImage(), 0, 0);
-
 
 	readFrame();
 

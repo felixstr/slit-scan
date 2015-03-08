@@ -25,12 +25,12 @@ public class slit_scan_v2 extends PApplet {
 SimpleOpenNI context;
 
 Capture video;
-int rowHeight = 3;
+int rowHeight = 10;
 float rowDelay = 80;
 
-float frameDelayStep;
+float frameDelayStep = 1;
 
-boolean topToBottom = true;
+boolean topToBottom = false;
 
 int frameNumber = 0;
 
@@ -42,7 +42,7 @@ public void setup() {
 	video = new Capture(this, 640, 480, 30);
 	video.start();
 	
-	frameDelayStep = (rowDelay/1000)* frameRate;
+	// frameDelayStep = (rowDelay/1000)* frameRate;
 	println("frameDelayStep: "+frameDelayStep);
 }
 

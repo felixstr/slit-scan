@@ -21,8 +21,8 @@ public class slit_scan_v1 extends PApplet {
 
 
 Capture video;
-int rowHeight = 10;
-float rowDelay = 50;
+int rowHeight = 1;
+float rowDelay = 10;
 boolean topToBottom = true;
 
 int frameNumber = 0;
