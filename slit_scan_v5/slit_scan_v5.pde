@@ -12,13 +12,20 @@ static final int CAM_INTERN = 0;
 static final int CAM_KINECT = 1;
 static final int CAM_EXTERN = 2;
 
+static final int FORM_TOP = 0;
+static final int FORM_BOTTOM = 1;
+static final int FORM_CENTER = 2;
+
+int videoOriginWidth = 640;
+int videoOriginHeight = 480;
+
 /**
 * KONFIGURATION
 */
-int rowHeight = 5; // höhe einer reihe
+int rowHeight = 2; // höhe einer reihe
 int frameDelayStep = 1; // frame verzögerung pro reihe
-boolean topToBottom = true;
-int currentCam = CAM_KINECT;
+int delayForm = FORM_CENTER;
+int currentCam = CAM_INTERN;
 
 
 void setup() {
@@ -27,7 +34,7 @@ void setup() {
 
 	switch (currentCam) {
 		case CAM_INTERN: 
-			video = new Capture(this, 640, 480, 30);
+			video = new Capture(this, videoOriginWidth, videoOriginHeight, 30);
 			video.start();
 			break;
 
@@ -43,7 +50,7 @@ void setup() {
 			break;
 	}	
 	
-	println("frameDelayStep: "+frameDelayStep);
+	// println("frameDelayStep: "+frameDelayStep);
 }
 
 void draw() {
@@ -67,9 +74,10 @@ void draw() {
 	readFrame();
 
 	pushMatrix();
-		scale(-1.66, 1.66);
+		float factor = width / float(videoOriginWidth);
+		scale(-factor, factor);
 		// scale(-1, 1);
-		translate(-640, 0);
+		translate(-videoOriginWidth, 0);
 
 		// bild zeichnen
 		drawImage();	
@@ -98,24 +106,55 @@ void drawImage() {
 	int top = 0;
 	int step = 0;
 	int frameDelay = 0;
+	int imageTop = 0;
 
-	while (top < height) {
-		frameDelay = int(frameNumber - (frameDelayStep * step));
-		
-		if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
-			int imageTop = top;
-			if (!topToBottom) {
-				imageTop = height-top-rowHeight;
+	if (delayForm == FORM_TOP || delayForm == FORM_BOTTOM) {
+		while (top < videoOriginHeight) {
+			frameDelay = int(frameNumber - (frameDelayStep * step));
+			
+			if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
+
+				switch (delayForm) {
+					case FORM_TOP: 
+						imageTop = top;
+						break;
+					case FORM_BOTTOM: 
+						imageTop = videoOriginHeight-top-rowHeight;
+						break;
+				}
+				
+
+				PImage frameImage = frameBuffer.get(frameDelay).get(0, imageTop, videoOriginWidth, rowHeight);
+
+				image(frameImage, 0, imageTop);
 			}
 
-			PImage frameImage = frameBuffer.get(frameDelay).get(0, imageTop, width, rowHeight);
+			top += rowHeight;
+			step++;
+		}
+	} else if (delayForm == FORM_CENTER) {
+		
+		while (top < (videoOriginHeight/2)+rowHeight) {
+			frameDelay = int(frameNumber - (frameDelayStep * step));
+			if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
 
-			image(frameImage, 0, imageTop);
+				int imageTop1 = videoOriginHeight/2 - top;
+				int imageTop2 = top + videoOriginHeight/2;
+
+				PImage frameImage1 = frameBuffer.get(frameDelay).get(0, imageTop1, videoOriginWidth, rowHeight);
+				image(frameImage1, 0, imageTop1);
+
+				PImage frameImage2 = frameBuffer.get(frameDelay).get(0, imageTop2, videoOriginWidth, rowHeight);
+				image(frameImage2, 0, imageTop2);
+			}
+
+			top += rowHeight;
+			step++;
 		}
 
-		top += rowHeight;
-		step++;
 	}
+
+
 
 	bufferClean(frameDelay);
 
