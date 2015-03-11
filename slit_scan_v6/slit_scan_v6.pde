@@ -27,7 +27,7 @@ PImage backgroundImage;
 * KONFIGURATION
 */
 int rowSize = 2; // höhe einer reihe
-int frameDelayStep = 2; // frame verzögerung pro reihe
+int frameDelayStep = 8; // frame verzögerung pro reihe
 int delayForm = FORM_BOTTOM; 
 int currentInput = INPUT_VIDEO;
 

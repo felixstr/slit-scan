@@ -46,8 +46,8 @@ PImage backgroundImage;
 /**
 * KONFIGURATION
 */
-int rowSize = 10; // h\u00f6he einer reihe
-int frameDelayStep = 2; // frame verz\u00f6gerung pro reihe
+int rowSize = 2; // h\u00f6he einer reihe
+int frameDelayStep = 8; // frame verz\u00f6gerung pro reihe
 int delayForm = FORM_BOTTOM; 
 int currentInput = INPUT_VIDEO;
 
@@ -75,10 +75,11 @@ public void setup() {
 			break;
 
 		case INPUT_VIDEO: 
-			myMovie = new Movie(this, "Under One_ Juhwan - Kevin Keller Remix-HD.mp4");
+			myMovie = new Movie(this, "Amanda.mp4");
 			videoOriginWidth = 1280/3*2;
 			videoOriginHeight = 720/3*2;
-  			myMovie.loop();
+
+  			myMovie.play();
 		break;
 	}	
 
@@ -89,7 +90,7 @@ public void setup() {
 }
 
 public void draw() {
-	background(0);
+	background(255);
 
 	// frame als bild im buffer speichern
 	readFrame();
