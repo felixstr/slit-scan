@@ -1,6 +1,26 @@
-import processing.video.*;
-import java.util.*;
-import SimpleOpenNI.*;
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
+
+import processing.video.*; 
+import java.util.*; 
+import SimpleOpenNI.*; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class slit_scan_v6 extends PApplet {
+
+
+
+
 
 SimpleOpenNI context;
 Capture video;
@@ -20,16 +40,18 @@ static final int FORM_VERTICAL_LEFT = 3;
 int videoOriginWidth = 640;
 int videoOriginHeight = 480;
 
+PImage backgroundImage;
+
 /**
 * KONFIGURATION
 */
-int rowSize = 20; // höhe einer reihe
-int frameDelayStep = 1; // frame verzögerung pro reihe
-int delayForm = FORM_VERTICAL_LEFT;
-int currentCam = CAM_INTERN;
+int rowSize = 50; // h\u00f6he einer reihe
+int frameDelayStep = 10; // frame verz\u00f6gerung pro reihe
+int delayForm = FORM_CENTER;
+int currentCam = CAM_KINECT;
 
 
-void setup() {
+public void setup() {
 	size(640*3/2, 480*3/2);
 	frameRate(30);
 
@@ -48,13 +70,15 @@ void setup() {
 			}
 			context.setMirror(false);
 			context.enableRGB();
+			// context.enableUser();
 			break;
 	}	
 	
+	backgroundImage = new PImage(videoOriginWidth, videoOriginHeight);
 	// println("frameDelayStep: "+frameDelayStep);
 }
 
-void draw() {
+public void draw() {
 	background(0);
 
 	switch (currentCam) {
@@ -75,7 +99,7 @@ void draw() {
 	readFrame();
 
 	pushMatrix();
-		float factor = width / float(videoOriginWidth);
+		float factor = width / PApplet.parseFloat(videoOriginWidth);
 		scale(-factor, factor);
 		// scale(-1, 1);
 		translate(-videoOriginWidth, 0);
@@ -89,19 +113,24 @@ void draw() {
 	
 }	
 
-void readFrame() {
+public void readFrame() {
+	PImage bufferImage = new PImage();
 	switch (currentCam) {
 		case CAM_INTERN: 
-			frameBuffer.put(frameNumber, video.get());
+			bufferImage = video.get();
 			break;
 
 		case CAM_KINECT:
-			frameBuffer.put(frameNumber, context.rgbImage().get());
+			bufferImage = context.rgbImage().get();
 			break;
 	}
+
+	bufferImage = deleteBackground(bufferImage);
+
+	frameBuffer.put(frameNumber, bufferImage);
 }
 
-void drawImage() {
+public void drawImage() {
 	
 	
 	int top = 0;
@@ -109,9 +138,9 @@ void drawImage() {
 	int frameDelay = 0;
 	int imageTop = 0;
 
-	if (delayForm == FORM_TOP || delayForm == FORM_BOTTOM) {
+	if (delayForm == FORM_TOP || delayForm == FORM_BOTTOM) {
 		while (top < videoOriginHeight) {
-			frameDelay = int(frameNumber - (frameDelayStep * step));
+			frameDelay = PApplet.parseInt(frameNumber - (frameDelayStep * step));
 			
 			if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
 
@@ -136,7 +165,7 @@ void drawImage() {
 	} else if (delayForm == FORM_CENTER) {
 		
 		while (top < (videoOriginHeight/2)+rowSize) {
-			frameDelay = int(frameNumber - (frameDelayStep * step));
+			frameDelay = PApplet.parseInt(frameNumber - (frameDelayStep * step));
 			if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
 
 				int imageTop1 = videoOriginHeight/2 - top;
@@ -159,7 +188,7 @@ void drawImage() {
 		int imageLeft = 0;
 
 		while (left < videoOriginWidth) {
-			frameDelay = int(frameNumber - (frameDelayStep * step));
+			frameDelay = PApplet.parseInt(frameNumber - (frameDelayStep * step));
 			if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
 
 				imageLeft = left;
@@ -180,7 +209,7 @@ void drawImage() {
 
 }
 
-void bufferClean(int frameDelay) {
+public void bufferClean(int frameDelay) {
 
 	if (frameBuffer.get(frameDelay-1) != null) {
 		ArrayList<Integer> deleteElements = new ArrayList<Integer>();
@@ -203,4 +232,69 @@ void bufferClean(int frameDelay) {
 		}
 	}
 
+}
+
+public PImage deleteBackground(PImage bufferImage) {
+	PImage returnImage = new PImage(bufferImage.width, bufferImage.height);
+
+	// println(bufferImage.pixels);
+	// println(returnImage.pixels);
+
+	for (int y = 0; y < bufferImage.height; y++) {
+		for (int x = 0; x < bufferImage.width; x++) {
+
+			int loc = x + y * bufferImage.width;
+			int fgColor = bufferImage.pixels[loc];
+			int bgColor = backgroundImage.pixels[loc];
+
+			float r1 = red(fgColor);
+			float g1 = green(fgColor);
+			float b1 = blue(fgColor);
+			float r2 = red(bgColor);
+			float g2 = green(bgColor);
+			float b2 = blue(bgColor);
+			float diff = dist(r1,g1,b1,r2,g2,b2);
+
+			// println(loc);
+			
+			if (backgroundImage.pixels.length > 0 && diff < 30) {
+				returnImage.pixels[loc] = color(20);
+			} else {
+				returnImage.pixels[loc] = bufferImage.pixels[loc];
+			}
+
+		}
+	}
+
+	return returnImage;
+}
+
+
+public void keyPressed() {
+	switch (key) {
+		case ' ':
+			
+			switch (currentCam) {
+				case CAM_INTERN: 
+					backgroundImage = video.get();
+					break;
+
+				case CAM_KINECT:
+					backgroundImage = context.rgbImage().get();
+					break;
+			}	
+
+
+		break;
+		
+	}
+}
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "slit_scan_v6" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
 }

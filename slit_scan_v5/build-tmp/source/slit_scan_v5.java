@@ -35,6 +35,7 @@ static final int CAM_EXTERN = 2;
 static final int FORM_TOP = 0;
 static final int FORM_BOTTOM = 1;
 static final int FORM_CENTER = 2;
+static final int FORM_VERTICAL_LEFT = 3;
 
 int videoOriginWidth = 640;
 int videoOriginHeight = 480;
@@ -42,9 +43,9 @@ int videoOriginHeight = 480;
 /**
 * KONFIGURATION
 */
-int rowHeight = 2; // h\u00f6he einer reihe
+int rowSize = 20; // h\u00f6he einer reihe
 int frameDelayStep = 1; // frame verz\u00f6gerung pro reihe
-int delayForm = FORM_CENTER;
+int delayForm = FORM_VERTICAL_LEFT;
 int currentCam = CAM_INTERN;
 
 
@@ -70,7 +71,7 @@ public void setup() {
 			break;
 	}	
 	
-	println("frameDelayStep: "+frameDelayStep);
+	// println("frameDelayStep: "+frameDelayStep);
 }
 
 public void draw() {
@@ -139,36 +140,55 @@ public void drawImage() {
 						imageTop = top;
 						break;
 					case FORM_BOTTOM: 
-						imageTop = videoOriginHeight-top-rowHeight;
+						imageTop = videoOriginHeight-top-rowSize;
 						break;
 				}
 				
 
-				PImage frameImage = frameBuffer.get(frameDelay).get(0, imageTop, videoOriginWidth, rowHeight);
+				PImage frameImage = frameBuffer.get(frameDelay).get(0, imageTop, videoOriginWidth, rowSize);
 
 				image(frameImage, 0, imageTop);
 			}
 
-			top += rowHeight;
+			top += rowSize;
 			step++;
 		}
 	} else if (delayForm == FORM_CENTER) {
 		
-		while (top < (videoOriginHeight/2)+rowHeight) {
+		while (top < (videoOriginHeight/2)+rowSize) {
 			frameDelay = PApplet.parseInt(frameNumber - (frameDelayStep * step));
 			if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
 
 				int imageTop1 = videoOriginHeight/2 - top;
 				int imageTop2 = top + videoOriginHeight/2;
 
-				PImage frameImage1 = frameBuffer.get(frameDelay).get(0, imageTop1, videoOriginWidth, rowHeight);
+				PImage frameImage1 = frameBuffer.get(frameDelay).get(0, imageTop1, videoOriginWidth, rowSize);
 				image(frameImage1, 0, imageTop1);
 
-				PImage frameImage2 = frameBuffer.get(frameDelay).get(0, imageTop2, videoOriginWidth, rowHeight);
+				PImage frameImage2 = frameBuffer.get(frameDelay).get(0, imageTop2, videoOriginWidth, rowSize);
 				image(frameImage2, 0, imageTop2);
 			}
 
-			top += rowHeight;
+			top += rowSize;
+			step++;
+		}
+
+	} else if (delayForm == FORM_VERTICAL_LEFT) {
+		
+		int left = 0;
+		int imageLeft = 0;
+
+		while (left < videoOriginWidth) {
+			frameDelay = PApplet.parseInt(frameNumber - (frameDelayStep * step));
+			if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
+
+				imageLeft = left;
+
+				PImage frameImage = frameBuffer.get(frameDelay).get(imageLeft, 0, rowSize, videoOriginHeight);
+				image(frameImage, imageLeft, 0);
+			}
+
+			left += rowSize;
 			step++;
 		}
 

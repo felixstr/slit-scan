@@ -20,13 +20,15 @@ static final int FORM_VERTICAL_LEFT = 3;
 int videoOriginWidth = 640;
 int videoOriginHeight = 480;
 
+PImage backgroundImage;
+
 /**
 * KONFIGURATION
 */
-int rowSize = 20; // höhe einer reihe
-int frameDelayStep = 1; // frame verzögerung pro reihe
-int delayForm = FORM_VERTICAL_LEFT;
-int currentCam = CAM_INTERN;
+int rowSize = 50; // höhe einer reihe
+int frameDelayStep = 10; // frame verzögerung pro reihe
+int delayForm = FORM_CENTER;
+int currentCam = CAM_KINECT;
 
 
 void setup() {
@@ -48,9 +50,11 @@ void setup() {
 			}
 			context.setMirror(false);
 			context.enableRGB();
+			// context.enableUser();
 			break;
 	}	
 	
+	backgroundImage = new PImage(videoOriginWidth, videoOriginHeight);
 	// println("frameDelayStep: "+frameDelayStep);
 }
 
@@ -90,15 +94,20 @@ void draw() {
 }	
 
 void readFrame() {
+	PImage bufferImage = new PImage();
 	switch (currentCam) {
 		case CAM_INTERN: 
-			frameBuffer.put(frameNumber, video.get());
+			bufferImage = video.get();
 			break;
 
 		case CAM_KINECT:
-			frameBuffer.put(frameNumber, context.rgbImage().get());
+			bufferImage = context.rgbImage().get();
 			break;
 	}
+
+	bufferImage = deleteBackground(bufferImage);
+
+	frameBuffer.put(frameNumber, bufferImage);
 }
 
 void drawImage() {
@@ -203,4 +212,60 @@ void bufferClean(int frameDelay) {
 		}
 	}
 
+}
+
+PImage deleteBackground(PImage bufferImage) {
+	PImage returnImage = new PImage(bufferImage.width, bufferImage.height);
+
+	// println(bufferImage.pixels);
+	// println(returnImage.pixels);
+
+	for (int y = 0; y < bufferImage.height; y++) {
+		for (int x = 0; x < bufferImage.width; x++) {
+
+			int loc = x + y * bufferImage.width;
+			color fgColor = bufferImage.pixels[loc];
+			color bgColor = backgroundImage.pixels[loc];
+
+			float r1 = red(fgColor);
+			float g1 = green(fgColor);
+			float b1 = blue(fgColor);
+			float r2 = red(bgColor);
+			float g2 = green(bgColor);
+			float b2 = blue(bgColor);
+			float diff = dist(r1,g1,b1,r2,g2,b2);
+
+			// println(loc);
+			
+			if (backgroundImage.pixels.length > 0 && diff < 30) {
+				returnImage.pixels[loc] = color(20);
+			} else {
+				returnImage.pixels[loc] = bufferImage.pixels[loc];
+			}
+
+		}
+	}
+
+	return returnImage;
+}
+
+
+void keyPressed() {
+	switch (key) {
+		case ' ':
+			
+			switch (currentCam) {
+				case CAM_INTERN: 
+					backgroundImage = video.get();
+					break;
+
+				case CAM_KINECT:
+					backgroundImage = context.rgbImage().get();
+					break;
+			}	
+
+
+		break;
+		
+	}
 }
