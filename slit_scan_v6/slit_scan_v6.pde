@@ -55,7 +55,7 @@ void setup() {
 			break;
 
 		case INPUT_VIDEO: 
-			myMovie = new Movie(this, "testimonials-original-HD.mp4");
+			myMovie = new Movie(this, "Under One_ Dia Dearstyne. Fulton Park Brooklyn NY-HD.mp4");
 			myMovie.width = videoOriginWidth;
 			myMovie.height = videoOriginHeight;
   			myMovie.loop();

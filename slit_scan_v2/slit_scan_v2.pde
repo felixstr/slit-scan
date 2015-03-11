@@ -5,7 +5,7 @@ import SimpleOpenNI.*;
 SimpleOpenNI context;
 
 Capture video;
-int rowHeight = 1;
+int rowHeight = 10;
 float rowDelay = 80;
 
 float frameDelayStep;
