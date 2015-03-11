@@ -53,7 +53,7 @@ int currentInput = INPUT_VIDEO;
 
 
 public void setup() {
-	size(640*3/2, 480*3/2);
+	
 	frameRate(30);
 
 	switch (currentInput) {
@@ -75,12 +75,14 @@ public void setup() {
 			break;
 
 		case INPUT_VIDEO: 
-			myMovie = new Movie(this, "testimonials-original-HD.mp4");
-			myMovie.width = videoOriginWidth;
-			myMovie.height = videoOriginHeight;
+			myMovie = new Movie(this, "Under One_ Juhwan - Kevin Keller Remix-HD.mp4");
+			videoOriginWidth = 1280/3*2;
+			videoOriginHeight = 720/3*2;
   			myMovie.loop();
 		break;
 	}	
+
+	size(videoOriginWidth*3/2, videoOriginHeight*3/2);
 	
 	backgroundImage = new PImage(videoOriginWidth, videoOriginHeight);
 	// println("frameDelayStep: "+frameDelayStep);
@@ -100,8 +102,6 @@ public void draw() {
 			scale(-factor, factor);
 			translate(-videoOriginWidth, 0);
 		}
-		// scale(-1, 1);
-		// translate(-videoOriginWidth, 0);
 
 		// bild zeichnen
 		drawImage();	
@@ -281,10 +281,9 @@ public PImage deleteBackground(PImage bufferImage) {
 	return returnImage;
 }
 
-
 public void keyPressed() {
 	switch (key) {
-		case ' ':
+		case 'b':
 			
 			switch (currentInput) {
 				case INPUT_INTERN: 
@@ -297,7 +296,10 @@ public void keyPressed() {
 			}	
 
 
-		break;
+			break;
+		case ' ': 
+			myMovie.jump(0);
+			break;
 		
 	}
 }

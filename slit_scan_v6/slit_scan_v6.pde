@@ -33,7 +33,7 @@ int currentInput = INPUT_VIDEO;
 
 
 void setup() {
-	size(640*3/2, 480*3/2);
+	
 	frameRate(30);
 
 	switch (currentInput) {
@@ -55,12 +55,14 @@ void setup() {
 			break;
 
 		case INPUT_VIDEO: 
-			myMovie = new Movie(this, "Under One_ Dia Dearstyne. Fulton Park Brooklyn NY-HD.mp4");
-			myMovie.width = videoOriginWidth;
-			myMovie.height = videoOriginHeight;
+			myMovie = new Movie(this, "Under One_ Juhwan - Kevin Keller Remix-HD.mp4");
+			videoOriginWidth = 1280/3*2;
+			videoOriginHeight = 720/3*2;
   			myMovie.loop();
 		break;
 	}	
+
+	size(videoOriginWidth*3/2, videoOriginHeight*3/2);
 	
 	backgroundImage = new PImage(videoOriginWidth, videoOriginHeight);
 	// println("frameDelayStep: "+frameDelayStep);
@@ -259,10 +261,9 @@ PImage deleteBackground(PImage bufferImage) {
 	return returnImage;
 }
 
-
 void keyPressed() {
 	switch (key) {
-		case ' ':
+		case 'b':
 			
 			switch (currentInput) {
 				case INPUT_INTERN: 
@@ -275,7 +276,10 @@ void keyPressed() {
 			}	
 
 
-		break;
+			break;
+		case ' ': 
+			myMovie.jump(0);
+			break;
 		
 	}
 }
