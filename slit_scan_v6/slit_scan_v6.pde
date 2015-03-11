@@ -74,9 +74,12 @@ void draw() {
 
 	pushMatrix();
 		float factor = width / float(videoOriginWidth);
-		scale(-factor, factor);
-		// scale(-1, 1);
-		translate(-videoOriginWidth, 0);
+		if (currentInput == INPUT_VIDEO) {
+			scale(factor, factor);
+		} else {
+			scale(-factor, factor);
+			translate(-videoOriginWidth, 0);
+		}
 
 		// bild zeichnen
 		drawImage();	

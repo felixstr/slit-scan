@@ -94,9 +94,14 @@ public void draw() {
 
 	pushMatrix();
 		float factor = width / PApplet.parseFloat(videoOriginWidth);
-		scale(-factor, factor);
+		if (currentInput == INPUT_VIDEO) {
+			scale(factor, factor);
+		} else {
+			scale(-factor, factor);
+			translate(-videoOriginWidth, 0);
+		}
 		// scale(-1, 1);
-		translate(-videoOriginWidth, 0);
+		// translate(-videoOriginWidth, 0);
 
 		// bild zeichnen
 		drawImage();	
