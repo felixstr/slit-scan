@@ -4,13 +4,14 @@ import SimpleOpenNI.*;
 
 SimpleOpenNI context;
 Capture video;
+Movie myMovie;
 
 int frameNumber = 0;
 HashMap<Integer, PImage> frameBuffer = new HashMap<Integer, PImage>();
 
-static final int CAM_INTERN = 0;
-static final int CAM_KINECT = 1;
-static final int CAM_EXTERN = 2;
+static final int INPUT_INTERN = 0;
+static final int INPUT_KINECT = 1;
+static final int INPUT_VIDEO = 2;
 
 static final int FORM_TOP = 0;
 static final int FORM_BOTTOM = 1;
@@ -25,23 +26,23 @@ PImage backgroundImage;
 /**
 * KONFIGURATION
 */
-int rowSize = 50; // höhe einer reihe
-int frameDelayStep = 10; // frame verzögerung pro reihe
-int delayForm = FORM_CENTER;
-int currentCam = CAM_KINECT;
+int rowSize = 10; // höhe einer reihe
+int frameDelayStep = 2; // frame verzögerung pro reihe
+int delayForm = FORM_BOTTOM; 
+int currentInput = INPUT_VIDEO;
 
 
 void setup() {
 	size(640*3/2, 480*3/2);
 	frameRate(30);
 
-	switch (currentCam) {
-		case CAM_INTERN: 
+	switch (currentInput) {
+		case INPUT_INTERN: 
 			video = new Capture(this, videoOriginWidth, videoOriginHeight, 30);
 			video.start();
 			break;
 
-		case CAM_KINECT:
+		case INPUT_KINECT:
 			context = new SimpleOpenNI(this);
 			if (context.isInit() == false) {
 				println("Can't init SimpleOpenNI, maybe the camera is not connected!");
@@ -52,6 +53,13 @@ void setup() {
 			context.enableRGB();
 			// context.enableUser();
 			break;
+
+		case INPUT_VIDEO: 
+			myMovie = new Movie(this, "testimonials-original-HD.mp4");
+			myMovie.width = videoOriginWidth;
+			myMovie.height = videoOriginHeight;
+  			myMovie.loop();
+		break;
 	}	
 	
 	backgroundImage = new PImage(videoOriginWidth, videoOriginHeight);
@@ -61,20 +69,6 @@ void setup() {
 void draw() {
 	background(0);
 
-	switch (currentCam) {
-		case CAM_INTERN: 
-			if (video.available()) {
-				video.read();
-			}
-			
-			video.loadPixels();
-			break;
-
-		case CAM_KINECT:
-			context.update();
-			break;
-	}
-	
 	// frame als bild im buffer speichern
 	readFrame();
 
@@ -95,17 +89,30 @@ void draw() {
 
 void readFrame() {
 	PImage bufferImage = new PImage();
-	switch (currentCam) {
-		case CAM_INTERN: 
+
+	switch (currentInput) {
+		case INPUT_INTERN: 
+			if (video.available()) {
+				video.read();
+			}
+			
+			video.loadPixels();
+
 			bufferImage = video.get();
 			break;
 
-		case CAM_KINECT:
+		case INPUT_KINECT:
+			context.update();
 			bufferImage = context.rgbImage().get();
+			break;
+
+		case INPUT_VIDEO: 
+			bufferImage = myMovie.get();
+			bufferImage.resize(videoOriginWidth, videoOriginHeight);
 			break;
 	}
 
-	bufferImage = deleteBackground(bufferImage);
+	// bufferImage = deleteBackground(bufferImage);
 
 	frameBuffer.put(frameNumber, bufferImage);
 }
@@ -254,12 +261,12 @@ void keyPressed() {
 	switch (key) {
 		case ' ':
 			
-			switch (currentCam) {
-				case CAM_INTERN: 
+			switch (currentInput) {
+				case INPUT_INTERN: 
 					backgroundImage = video.get();
 					break;
 
-				case CAM_KINECT:
+				case INPUT_KINECT:
 					backgroundImage = context.rgbImage().get();
 					break;
 			}	
@@ -268,4 +275,8 @@ void keyPressed() {
 		break;
 		
 	}
+}
+
+void movieEvent(Movie m) {
+	m.read();
 }
