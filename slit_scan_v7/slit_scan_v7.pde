@@ -29,8 +29,8 @@ int videoOriginHeight = 480;
 * KONFIGURATION
 */
 int rowSize = 20; // höhe einer reihe
-int frameDelayStep = 40; // frame verzögerung pro reihe
-int currentInput = INPUT_VIDEO;
+int frameDelayStep = 3; // frame verzögerung pro reihe
+int currentInput = INPUT_KINECT;
 int delayForm = FORM_BOTTOM; 
 
 
@@ -65,12 +65,18 @@ void setup() {
 		break;
 	}	
 
-	size(videoOriginWidth*3/2, videoOriginHeight*3/2, P2D);
+	// size(videoOriginWidth*3/2, videoOriginHeight*3/2, P2D);
+	float factor = float(displayHeight)/float(videoOriginHeight);
+	size(displayWidth, displayHeight, P2D);
+	// size(int(videoOriginWidth*factor), displayHeight, P2D);
+
 
 	mask = createGraphics(videoOriginWidth, videoOriginHeight, P2D);
 	
 	// println("frameDelayStep: "+frameDelayStep);
 }
+
+boolean sketchFullScreen() { return true; }
 
 void draw() {
 	background(255);
