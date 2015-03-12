@@ -19,7 +19,7 @@ static final int FORM_TOP = 0;
 static final int FORM_BOTTOM = 1;
 static final int FORM_CENTER = 2;
 static final int FORM_VERTICAL_LEFT = 3;
-static final int FORM_MASK_CENTER = 4;
+static final int FORM_MASK_CENTER = 4;   ///kreis
 
 int videoOriginWidth = 640;
 int videoOriginHeight = 480;
@@ -28,10 +28,10 @@ int videoOriginHeight = 480;
 /**
 * KONFIGURATION
 */
-int rowSize = 20; // höhe einer reihe
-int frameDelayStep = 3; // frame verzögerung pro reihe
-int currentInput = INPUT_KINECT;
-int delayForm = FORM_BOTTOM; 
+int rowSize = 10; // höhe einer reihe
+int frameDelayStep = 2; // frame verzögerung pro reihe
+int currentInput = INPUT_VIDEO;  //auswahl eingabe
+int delayForm = FORM_BOTTOM; // auswahl ausgabe
 
 
 
@@ -58,16 +58,16 @@ void setup() {
 			break;
 
 		case INPUT_VIDEO: 
-			myMovie = new Movie(this, "Under One_ Amanda MacLeod. Vernon Ave Brooklyn NY-HD.mp4");
+			myMovie = new Movie(this, "Amanda.mp4");
 			videoOriginWidth = 1280/3*2;
 			videoOriginHeight = 720/3*2;
-  			myMovie.loop();
+  			myMovie.play();   //loop
 		break;
 	}	
 
-	// size(videoOriginWidth*3/2, videoOriginHeight*3/2, P2D);
+	size(videoOriginWidth*3/2, videoOriginHeight*3/2, P2D);
 	float factor = float(displayHeight)/float(videoOriginHeight);
-	size(displayWidth, displayHeight, P2D);
+	// size(displayWidth, displayHeight, P2D);
 	// size(int(videoOriginWidth*factor), displayHeight, P2D);
 
 
@@ -76,7 +76,7 @@ void setup() {
 	// println("frameDelayStep: "+frameDelayStep);
 }
 
-boolean sketchFullScreen() { return true; }
+boolean sketchFullScreen() { return false; }  // true
 
 void draw() {
 	background(255);
