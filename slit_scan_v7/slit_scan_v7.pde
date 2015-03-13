@@ -19,7 +19,9 @@ static final int FORM_TOP = 0;
 static final int FORM_BOTTOM = 1;
 static final int FORM_CENTER = 2;
 static final int FORM_VERTICAL_LEFT = 3;
-static final int FORM_MASK_CENTER = 4;   ///kreis
+static final int FORM_MASK_CENTER_ELLIPSE = 4;
+static final int FORM_MASK_CENTER_RECT = 5;
+
 
 int videoOriginWidth = 640;
 int videoOriginHeight = 480;
@@ -28,10 +30,10 @@ int videoOriginHeight = 480;
 /**
 * KONFIGURATION
 */
-int rowSize = 10; // höhe einer reihe
-int frameDelayStep = 2; // frame verzögerung pro reihe
+int rowSize = 80; // höhe einer reihe
+int frameDelayStep = 1; // frame verzögerung pro reihe
 int currentInput = INPUT_VIDEO;  //auswahl eingabe
-int delayForm = FORM_BOTTOM; // auswahl ausgabe
+int delayForm = FORM_MASK_CENTER_ELLIPSE; // auswahl ausgabe
 
 
 
@@ -138,7 +140,7 @@ void drawImage() {
 	int frameDelay = 0;
 	int imageTop = 0;
 
-	if (delayForm == FORM_MASK_CENTER) {
+	if (delayForm == FORM_MASK_CENTER_RECT || delayForm == FORM_MASK_CENTER_ELLIPSE) {
 		
 		while (top < videoOriginWidth) {
 			frameDelay = int(frameNumber - (frameDelayStep * step));
@@ -152,7 +154,8 @@ void drawImage() {
 			step++;
 		}
 
-	} else if (delayForm == FORM_TOP || delayForm == FORM_BOTTOM) {
+
+       } else if (delayForm == FORM_TOP || delayForm == FORM_BOTTOM) {
 		while (top < videoOriginHeight) {
 			frameDelay = int(frameNumber - (frameDelayStep * step));
 			
@@ -229,21 +232,27 @@ PImage mask(int frameDelay, int top) {
 
 
 	// create mask
+        mask.beginDraw();
 
-	mask.beginDraw();
-
-	mask.background(0);
-	mask.noStroke();
-	mask.fill(255);
-	mask.smooth();
+        mask.background(0);
+        mask.noStroke();
+        mask.smooth();
+        
+  if (delayForm == FORM_MASK_CENTER_ELLIPSE) {
+        mask.fill(255);
 	mask.ellipse(videoOriginWidth/2,videoOriginHeight/2,rowSize+top,rowSize+top);
-
 	mask.fill(0);
 	mask.ellipse(videoOriginWidth/2,videoOriginHeight/2,top-2,top-2);
-	mask.endDraw();
 
-	frameImage.mask( mask.get() );
-
+  } else if (delayForm == FORM_MASK_CENTER_RECT) {
+        mask.rectMode(CENTER);
+        mask.fill(255);
+        mask.rect(videoOriginWidth/2,videoOriginHeight/2,rowSize+top,rowSize+top);
+        mask.fill(0);
+        mask.rect(videoOriginWidth/2,videoOriginHeight/2,top-2,top-2);
+  }
+        mask.endDraw();
+        frameImage.mask( mask.get() );
 
 	return frameImage;
 
