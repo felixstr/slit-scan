@@ -60,14 +60,18 @@ int videoOutputHeight;
 // logitec resize-factor (performance)
 int logitechResizeFactor = 2;
 
+// position (tiefe) im raum in prozent
+int depthPercent = 100;
+
 
 /**
 * KONFIGURATION
 */
-int rowSize = 20; // h\u00f6he einer reihe
+boolean mirror = true;
+int rowSize = 15; // h\u00f6he einer reihe
 int frameDelayStep = 1; // frame verz\u00f6gerung pro reihe
 int currentInput = INPUT_INTERN;
-int delayForm = FORM_VERTICAL_CENTER; 
+int delayForm = FORM_BOTTOM; 
 
 boolean measureDepth = false;
 
@@ -82,15 +86,18 @@ public void setup() {
 			videoOriginHeight = 1080/logitechResizeFactor;
 
 			video = new Capture(this, 1920, 1080, "HD Pro Webcam C920", 15);
+			// video = new Capture(this, 1920, 1080, "HD Pro Webcam C920 #2", 15);
 			video.start();
-		break;
+			break;
+
 		case INPUT_INTERN: 
 			videoOriginWidth = 1280;
 			videoOriginHeight = 720;
 
 			video = new Capture(this, videoOriginWidth, videoOriginHeight, "FaceTime HD-Kamera (integriert)", 15);
 			video.start();
-		break;
+			break;
+
 		case INPUT_KINECT:
 			videoOriginWidth = 640;
 			videoOriginHeight = 480;
@@ -104,16 +111,14 @@ public void setup() {
 			context.setMirror(false);
 			context.enableRGB();
 			context.enableDepth();
-
-			
-			// context.enableUser();
 			break;
+
 		case INPUT_VIDEO: 
 			myMovie = new Movie(this, "test-video.mp4");
 			videoOriginWidth = 1280;
 			videoOriginHeight = 720;
   			myMovie.loop();
-		break;
+			break;
 	}
 
 	if (measureDepth && currentInput == INPUT_LOGITECH) {
@@ -128,14 +133,12 @@ public void setup() {
 		context.enableDepth();
 	}
 
-	// windowWidth = displayWidth;
-	// windowHeight = displayHeight;
+	windowWidth = displayWidth;
+	windowHeight = displayHeight;
 	// windowWidth = 3240;
 	// windowHeight = 1960;
-	windowWidth = 960;
-	windowHeight = 540;
-	// windowWidth = displayWidth;
-	// windowHeight = displayHeight;
+	// windowWidth = 960;
+	// windowHeight = 540;
 
 	size(windowWidth, windowHeight, P2D);
 
@@ -145,21 +148,9 @@ public void setup() {
 	
 }
 
-public boolean sketchFullScreen() { return false; }
+public boolean sketchFullScreen() { return true; }
 
-public void calcVideoSize() {
-	
-	if (PApplet.parseFloat(windowWidth)/PApplet.parseFloat(windowHeight) > PApplet.parseFloat(videoOriginWidth)/PApplet.parseFloat(videoOriginHeight)) {
-		videoOutputWidth = videoOriginWidth;
-		videoOutputHeight = PApplet.parseInt(videoOriginWidth*(PApplet.parseFloat(windowHeight)/PApplet.parseFloat(windowWidth)));
-	} else {
-		videoOutputWidth = PApplet.parseInt(videoOriginHeight*(PApplet.parseFloat(windowWidth)/PApplet.parseFloat(windowHeight)));
-		videoOutputHeight = videoOriginHeight;
-	}
 
-	println(videoOutputWidth);
-	println(videoOutputHeight);
-}
 
 public void draw() {
 	background(255);
@@ -175,17 +166,22 @@ public void draw() {
 
 	// frame als bild im buffer speichern
 	readFrame();
-	println(frameRate);
+	// println(frameRate);
 
-	// image(frameBuffer.get(frameNumber), 0, 0);
 
 	pushMatrix();
 		float factor = PApplet.parseFloat(windowWidth) / PApplet.parseFloat(videoOutputWidth);
 		if (currentInput == INPUT_VIDEO) {
 			scale(factor, factor);
 		} else {
-			scale(-factor, factor);
-			translate(-videoOutputWidth, 0);
+
+			if (mirror) {
+				scale(-factor, factor);
+				translate(-videoOutputWidth, 0);
+			} else {
+				scale(factor, factor);
+			}
+			
 		}
 
 		// bild zeichnen
@@ -197,6 +193,26 @@ public void draw() {
 	
 }	
 
+/**
+* berechnet die h\u00f6he und breite der video ausgabe. 
+*/
+public void calcVideoSize() {
+	
+	if (PApplet.parseFloat(windowWidth)/PApplet.parseFloat(windowHeight) > PApplet.parseFloat(videoOriginWidth)/PApplet.parseFloat(videoOriginHeight)) {
+		videoOutputWidth = videoOriginWidth;
+		videoOutputHeight = PApplet.parseInt(videoOriginWidth*(PApplet.parseFloat(windowHeight)/PApplet.parseFloat(windowWidth)));
+	} else {
+		videoOutputWidth = PApplet.parseInt(videoOriginHeight*(PApplet.parseFloat(windowWidth)/PApplet.parseFloat(windowHeight)));
+		videoOutputHeight = videoOriginHeight;
+	}
+
+	println(videoOutputWidth);
+	println(videoOutputHeight);
+}
+
+/**
+* liest das aktuelle frame. schneidet es in das richtige seitenverh\u00e4ltniss und speichert es im buffer
+*/
 public void readFrame() {
 	PImage bufferImage = new PImage();
 
@@ -228,9 +244,17 @@ public void readFrame() {
 
 	// buffer bild auf seitenverhaeltniss zuschneiden
 	bufferImage = bufferImage.get(PApplet.parseInt((videoOriginWidth - videoOutputWidth)/2) ,0, videoOutputWidth, videoOutputHeight);
+
+	// saturation abh\u00e4ngig von der distanz
+	updateSaturation(bufferImage, depthPercent);
+
+	// bild in den buffer speichern
 	frameBuffer.put(frameNumber, bufferImage);
 }
 
+/**
+* bild ausgabe. diverse formen.
+*/
 public void drawImage() {
 	// image(frameBuffer.get(frameNumber), 0, 0);
 	
@@ -346,45 +370,59 @@ public void drawImage() {
 	}
 
 
-
 	bufferClean(frameDelay);
 
 }
 
+/**
+* misst den n\u00e4chsten punkt. \u00e4ndert rowSize und frameDelayStep. speichert die tiefe in prozent (f\u00fcr die saturation).
+*/
 public void updateDepth() {
 	context.update();
 	context.alternativeViewPointDepthToImage();
 
 	int[] depthMap = context.depthMap();
-	int maxDepth = 1500;
+	
+	int minDepth = 600;
+	int maxDepth = 3000;
 	int nearest = 0;
+
 	for(int x=0; x < depthMap.length; x++) {
-   		if (depthMap[x] > 600 && depthMap[x] < maxDepth) {
+   		if (depthMap[x] > minDepth && depthMap[x] < maxDepth) {
    			if (nearest == 0 || depthMap[x] < nearest) {
    				nearest = depthMap[x];
    			}
    		}
     }
 
-    println(nearest);
+    depthPercent = PApplet.parseInt(map(nearest, minDepth, maxDepth, 100, 10));
 
-    if (nearest < 1000) {
-    	rowSize = 50;
-		frameDelayStep = 2;
-    } else if (nearest < 2000) {
-    	rowSize = 20;
+    // println(nearest);
+    // println(depthPercent);
+
+    /**
+    * Konfiguration
+    */
+    if (nearest < 1400) {
+    	rowSize = 60;
 		frameDelayStep = 1;
-    } else if (nearest < 3000) {
-    	rowSize = 10;
+    } else if (nearest < 2200) {
+    	rowSize = 30;
 		frameDelayStep = 1;
+    } else {
+    	rowSize = 15;
+		frameDelayStep = 1;
+
     }
 
 }
 
+/**
+* erstellt eine maske und errechnet das neue bild
+*/ 
 public PImage mask(int frameDelay, int top) {
 	PImage frameImage = frameBuffer.get(frameDelay);
 
-	// println(videoOutputWidth);
 	// create mask
 
 	mask.beginDraw();
@@ -413,8 +451,13 @@ public PImage mask(int frameDelay, int top) {
 
 }
 
+/**
+* l\u00f6scht die zu alten bilder im buffer.
+*/ 
 public void bufferClean(int frameDelay) {
-	int limitClean = (videoOutputHeight/rowSize)*frameDelayStep;
+	// int limitClean = (videoOutputHeight/rowSize)*frameDelayStep;
+	int limitClean = (videoOutputHeight/60)*5;
+
 
 	if (frameBuffer.get(frameDelay-limitClean) != null && frameNumber % 100 == 0) {
 		ArrayList<Integer> deleteElements = new ArrayList<Integer>();
@@ -441,7 +484,25 @@ public void bufferClean(int frameDelay) {
 	}
 }
 
-public void keyPressed() {
+/**
+* \u00e4ndert die saturation eines bildes
+*/ 
+public void updateSaturation(PImage frameImage, int saturationPercent) {
+	colorMode(HSB);
+
+	for (int i = 0; i < frameImage.pixels.length; i++) {
+		float b = brightness(frameImage.pixels[i]);
+    	float s = saturation(frameImage.pixels[i]);
+    	float h = hue(frameImage.pixels[i]);
+
+    	frameImage.pixels[i] = color(h, s/100*saturationPercent, b);
+	}
+
+	colorMode(RGB);
+}
+
+/*
+void keyPressed() {
 	println(keyCode);
 	switch (keyCode) {
 		case 32: 
@@ -468,7 +529,7 @@ public void keyPressed() {
 			break;
 	}
 }
-
+*/
 
 public void movieEvent(Movie m) {
 	m.read();
