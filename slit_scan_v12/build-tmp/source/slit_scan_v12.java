@@ -68,7 +68,7 @@ int depthPercent = 100;
 * KONFIGURATION
 */
 boolean mirror = true;
-int rowSize = 15; // h\u00f6he einer reihe
+int rowSize = 20; // h\u00f6he einer reihe
 int frameDelayStep = 1; // frame verz\u00f6gerung pro reihe
 int currentInput = INPUT_INTERN;
 int delayForm = FORM_BOTTOM; 
@@ -501,8 +501,8 @@ public void updateSaturation(PImage frameImage, int saturationPercent) {
 	colorMode(RGB);
 }
 
-/*
-void keyPressed() {
+
+public void keyPressed() {
 	println(keyCode);
 	switch (keyCode) {
 		case 32: 
@@ -516,20 +516,23 @@ void keyPressed() {
 			break;
 
 		case 49: 
-		 	rowSize = 50;
-			frameDelayStep = 2;
+		 	delayForm = FORM_TOP;
 		 	break;
 		case 50: 
-			rowSize = 30;
-			frameDelayStep = 1;
+			delayForm = FORM_BOTTOM;
 			break;
 		case 51: 
-			rowSize = 10;
-			frameDelayStep = 1;
+			delayForm = FORM_HORIZONTAL_CENTER;
+			break;
+		case 52: 
+			delayForm = FORM_MASK_CENTER_ELLIPSE;
+			break;
+		case 53: 
+			delayForm = FORM_MASK_CENTER_RECT;
 			break;
 	}
 }
-*/
+
 
 public void movieEvent(Movie m) {
 	m.read();
