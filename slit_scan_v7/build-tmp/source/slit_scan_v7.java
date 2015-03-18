@@ -44,14 +44,20 @@ static final int FORM_MASK_CENTER = 4;
 int videoOriginWidth = 640;
 int videoOriginHeight = 480;
 
+int videoOutputWidth;
+int videoOutputHeight;
+
+int windowWidth;
+int windowHeight;
+
 
 /**
 * KONFIGURATION
 */
-int rowSize = 20; // h\u00f6he einer reihe
-int frameDelayStep = 3; // frame verz\u00f6gerung pro reihe
+int rowSize = 10; // h\u00f6he einer reihe
+int frameDelayStep = 1; // frame verz\u00f6gerung pro reihe
 int currentInput = INPUT_KINECT;
-int delayForm = FORM_BOTTOM; 
+int delayForm = FORM_MASK_CENTER; 
 
 
 
@@ -86,17 +92,24 @@ public void setup() {
 	}	
 
 	// size(videoOriginWidth*3/2, videoOriginHeight*3/2, P2D);
-	float factor = PApplet.parseFloat(displayHeight)/PApplet.parseFloat(videoOriginHeight);
-	size(displayWidth, displayHeight, P2D);
+	// float factor = float(displayHeight)/float(videoOriginHeight);
+	// size(displayWidth, displayHeight, P2D);
 	// size(int(videoOriginWidth*factor), displayHeight, P2D);
 
+	windowWidth = 1280;
+	windowHeight = 720;
 
-	mask = createGraphics(videoOriginWidth, videoOriginHeight, P2D);
+	size(windowWidth, windowHeight, P2D);
+
+	videoOutputWidth = windowWidth;
+	videoOutputHeight = PApplet.parseInt(videoOriginWidth*(PApplet.parseFloat(windowHeight)/PApplet.parseFloat(windowWidth)));
+
+	mask = createGraphics(videoOutputWidth, videoOutputHeight, P2D);
 	
 	// println("frameDelayStep: "+frameDelayStep);
 }
 
-public boolean sketchFullScreen() { return true; }
+public boolean sketchFullScreen() { return false; }
 
 public void draw() {
 	background(255);
@@ -147,11 +160,13 @@ public void readFrame() {
 			break;
 	}
 
+	// buffer bild auf seitenverhaeltniss zuschneiden
+	bufferImage = bufferImage.get(0,0, videoOutputWidth, videoOutputHeight);
 	frameBuffer.put(frameNumber, bufferImage);
 }
 
 public void drawImage() {
-	
+	// image(frameBuffer.get(frameNumber), 0, 0);
 	
 	int top = 0;
 	int step = 0;
@@ -173,7 +188,7 @@ public void drawImage() {
 		}
 
 	} else if (delayForm == FORM_TOP || delayForm == FORM_BOTTOM) {
-		while (top < videoOriginHeight) {
+		while (top < videoOutputHeight) {
 			frameDelay = PApplet.parseInt(frameNumber - (frameDelayStep * step));
 			
 			if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
@@ -183,12 +198,12 @@ public void drawImage() {
 						imageTop = top;
 						break;
 					case FORM_BOTTOM: 
-						imageTop = videoOriginHeight-top-rowSize;
+						imageTop = videoOutputHeight-top-rowSize;
 						break;
 				}
 				
 
-				PImage frameImage = frameBuffer.get(frameDelay).get(0, imageTop, videoOriginWidth, rowSize);
+				PImage frameImage = frameBuffer.get(frameDelay).get(0, imageTop, videoOutputWidth, rowSize);
 
 				image(frameImage, 0, imageTop);
 			}
@@ -244,10 +259,9 @@ public void drawImage() {
 }
 
 public PImage mask(int frameDelay, int top) {
-	PImage returnImage = createImage(videoOriginWidth, videoOriginHeight, ARGB);
 	PImage frameImage = frameBuffer.get(frameDelay);
 
-
+	println(videoOutputWidth);
 	// create mask
 
 	mask.beginDraw();
@@ -256,10 +270,11 @@ public PImage mask(int frameDelay, int top) {
 	mask.noStroke();
 	mask.fill(255);
 	mask.smooth();
-	mask.ellipse(videoOriginWidth/2,videoOriginHeight/2,rowSize+top,rowSize+top);
+	mask.ellipse(videoOutputWidth/2,0,300,300);
+	// mask.ellipse(20,20,rowSize+top,rowSize+top);
 
-	mask.fill(0);
-	mask.ellipse(videoOriginWidth/2,videoOriginHeight/2,top-2,top-2);
+	// mask.fill(0);
+	// mask.ellipse(mask.width/2,mask.height/2,top-2,top-2);
 	mask.endDraw();
 
 	frameImage.mask( mask.get() );

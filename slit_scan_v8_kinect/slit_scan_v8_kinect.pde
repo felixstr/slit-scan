@@ -98,6 +98,7 @@ PImage getImage() {
 
     }
 
+
     rowSize = int(map(nearest, 600, maxDepth, 50, 1));
 
     println("rowSize: "+rowSize);
