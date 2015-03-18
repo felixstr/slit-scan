@@ -41,7 +41,7 @@ static final int FORM_TOP = 1;
 static final int FORM_BOTTOM = 2;
 static final int FORM_CENTER = 3;
 static final int FORM_VERTICAL_RIGHT = 4;
-static final int FORM_MASK_CENTER = 5; // doesnt work yet
+static final int FORM_MASK_CENTER = 5;
 
 // video input groesse, wird im setup beim jeweiligen input definiert
 int videoOriginWidth;
@@ -55,34 +55,29 @@ int windowHeight;
 int videoOutputWidth;
 int videoOutputHeight;
 
+// logitec resize-factor (performance)
+int logitechResizeFactor = 2;
+
 
 /**
 * KONFIGURATION
 */
-int rowSize = 20; // h\u00f6he einer reihe
+int rowSize = 30; // h\u00f6he einer reihe
 int frameDelayStep = 1; // frame verz\u00f6gerung pro reihe
-int currentInput = INPUT_LOGITECH;
-int delayForm = FORM_TOP; 
-
+int currentInput = INPUT_INTERN;
+int delayForm = FORM_MASK_CENTER; 
 
 
 public void setup() {
 
-	frameRate(18); 
+	frameRate(20); 
 
 	switch (currentInput) {
 		case INPUT_LOGITECH: 
-			String[] cameras = Capture.list();
-			println(cameras[16]);
-			println(cameras[17]);
-			println(cameras[18]);
-			println(cameras[19]);
-
-			videoOriginWidth = 1920;
-			videoOriginHeight = 1080;
+			videoOriginWidth = 1920/logitechResizeFactor;
+			videoOriginHeight = 1080/logitechResizeFactor;
 
 			video = new Capture(this, 1920, 1080, "HD Pro Webcam C920", 15);
-			// video = new Capture(this, cameras[16]);
 			video.start();
 		break;
 		case INPUT_INTERN: 
@@ -116,18 +111,20 @@ public void setup() {
 		break;
 	}
 
-	windowWidth = displayWidth;
-	windowHeight = displayHeight;
+	// windowWidth = displayWidth;
+	// windowHeight = displayHeight;
 	// windowWidth = 3240;
 	// windowHeight = 1960;
-	// windowWidth = 960;
-	// windowHeight = 540;
+	windowWidth = 960;
+	windowHeight = 540;
+	// windowWidth = displayWidth;
+	// windowHeight = displayHeight;
 
-	size(windowWidth, windowHeight);
+	size(windowWidth, windowHeight, P2D);
 
 	calcVideoSize();
 
-	// mask = createGraphics(videoOutputWidth, videoOutputHeight, P2D);
+	mask = createGraphics(videoOutputWidth, videoOutputHeight, P2D);
 	
 }
 
@@ -150,9 +147,9 @@ public void calcVideoSize() {
 public void draw() {
 	background(255);
 	// frame.setLocation(-2160,0); 
-	// if (frameNumber < 20) {
-	// 	frame.setLocation(0,0); 
-	// }
+	if (frameNumber < 20) {
+		frame.setLocation(0,0); 
+	}
 
 	// frame als bild im buffer speichern
 	readFrame();
@@ -191,6 +188,9 @@ public void readFrame() {
 			video.loadPixels();
 
 			bufferImage = video.get();
+			if (currentInput == INPUT_LOGITECH) {
+				bufferImage.resize(bufferImage.width/logitechResizeFactor, bufferImage.height/logitechResizeFactor);
+			}
 			break;
 
 		case INPUT_KINECT:
@@ -222,7 +222,7 @@ public void drawImage() {
 		image(frameBuffer.get(frameDelay), 0, 0);
 	} if (delayForm == FORM_MASK_CENTER) {
 		
-		while (top < videoOriginWidth) {
+		while (top < videoOutputWidth) {
 			frameDelay = PApplet.parseInt(frameNumber - (frameDelayStep * step));
 
 			if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
@@ -313,15 +313,19 @@ public PImage mask(int frameDelay, int top) {
 
 	mask.beginDraw();
 
+	mask.rectMode(CENTER);
 	mask.background(0);
 	mask.noStroke();
 	mask.fill(255);
 	mask.smooth();
 	// mask.ellipse(videoOutputWidth/2,0,300,300);
-	mask.ellipse(mask.width/2,mask.height/2,rowSize+top,rowSize+top);
+	//mask.ellipse(mask.width/2,mask.height/2,rowSize+top,rowSize+top);
+	mask.rect(mask.width/2,mask.height/2,rowSize+top,rowSize+top);
+
 
 	mask.fill(0);
-	mask.ellipse(mask.width/2,mask.height/2,top-2,top-2);
+	//mask.ellipse(mask.width/2,mask.height/2,top-2,top-2);
+	mask.rect(mask.width/2,mask.height/2,top-2,top-2);
 	mask.endDraw();
 
 	frameImage.mask( mask.get() );
@@ -332,7 +336,7 @@ public PImage mask(int frameDelay, int top) {
 }
 
 public void bufferClean(int frameDelay) {
-
+	// height*size*delay
 	if (frameBuffer.get(frameDelay-frameDelayStep) != null && frameNumber % 100 == 0) {
 		ArrayList<Integer> deleteElements = new ArrayList<Integer>();
 
