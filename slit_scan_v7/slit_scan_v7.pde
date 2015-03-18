@@ -19,7 +19,9 @@ static final int FORM_TOP = 0;
 static final int FORM_BOTTOM = 1;
 static final int FORM_CENTER = 2;
 static final int FORM_VERTICAL_LEFT = 3;
-static final int FORM_MASK_CENTER = 4;
+static final int FORM_MASK_CENTER_ELLIPSE = 4;
+static final int FORM_MASK_CENTER_RECT = 5;
+
 
 int videoOriginWidth = 640;
 int videoOriginHeight = 480;
@@ -34,10 +36,17 @@ int windowHeight;
 /**
 * KONFIGURATION
 */
+<<<<<<< HEAD
 int rowSize = 10; // höhe einer reihe
 int frameDelayStep = 1; // frame verzögerung pro reihe
 int currentInput = INPUT_KINECT;
 int delayForm = FORM_MASK_CENTER; 
+=======
+int rowSize = 80; // höhe einer reihe
+int frameDelayStep = 1; // frame verzögerung pro reihe
+int currentInput = INPUT_VIDEO;  //auswahl eingabe
+int delayForm = FORM_MASK_CENTER_ELLIPSE; // auswahl ausgabe
+>>>>>>> origin/master
 
 
 
@@ -64,15 +73,20 @@ void setup() {
 			break;
 
 		case INPUT_VIDEO: 
-			myMovie = new Movie(this, "Under One_ Amanda MacLeod. Vernon Ave Brooklyn NY-HD.mp4");
+			myMovie = new Movie(this, "Amanda.mp4");
 			videoOriginWidth = 1280/3*2;
 			videoOriginHeight = 720/3*2;
-  			myMovie.loop();
+  			myMovie.play();   //loop
 		break;
 	}	
 
+<<<<<<< HEAD
 	// size(videoOriginWidth*3/2, videoOriginHeight*3/2, P2D);
 	// float factor = float(displayHeight)/float(videoOriginHeight);
+=======
+	size(videoOriginWidth*3/2, videoOriginHeight*3/2, P2D);
+	float factor = float(displayHeight)/float(videoOriginHeight);
+>>>>>>> origin/master
 	// size(displayWidth, displayHeight, P2D);
 	// size(int(videoOriginWidth*factor), displayHeight, P2D);
 
@@ -89,7 +103,11 @@ void setup() {
 	// println("frameDelayStep: "+frameDelayStep);
 }
 
+<<<<<<< HEAD
 boolean sketchFullScreen() { return false; }
+=======
+boolean sketchFullScreen() { return false; }  // true
+>>>>>>> origin/master
 
 void draw() {
 	background(255);
@@ -153,7 +171,7 @@ void drawImage() {
 	int frameDelay = 0;
 	int imageTop = 0;
 
-	if (delayForm == FORM_MASK_CENTER) {
+	if (delayForm == FORM_MASK_CENTER_RECT || delayForm == FORM_MASK_CENTER_ELLIPSE) {
 		
 		while (top < videoOriginWidth) {
 			frameDelay = int(frameNumber - (frameDelayStep * step));
@@ -167,8 +185,14 @@ void drawImage() {
 			step++;
 		}
 
+<<<<<<< HEAD
 	} else if (delayForm == FORM_TOP || delayForm == FORM_BOTTOM) {
 		while (top < videoOutputHeight) {
+=======
+
+       } else if (delayForm == FORM_TOP || delayForm == FORM_BOTTOM) {
+		while (top < videoOriginHeight) {
+>>>>>>> origin/master
 			frameDelay = int(frameNumber - (frameDelayStep * step));
 			
 			if (frameDelay > 0 && frameBuffer.get(frameDelay) != null) {
@@ -243,6 +267,7 @@ PImage mask(int frameDelay, int top) {
 
 	// println(videoOutputWidth);
 	// create mask
+<<<<<<< HEAD
 
 	mask.beginDraw();
 
@@ -258,7 +283,29 @@ PImage mask(int frameDelay, int top) {
 	mask.endDraw();
 
 	frameImage.mask( mask.get() );
+=======
+        mask.beginDraw();
 
+        mask.background(0);
+        mask.noStroke();
+        mask.smooth();
+        
+  if (delayForm == FORM_MASK_CENTER_ELLIPSE) {
+        mask.fill(255);
+	mask.ellipse(videoOriginWidth/2,videoOriginHeight/2,rowSize+top,rowSize+top);
+	mask.fill(0);
+	mask.ellipse(videoOriginWidth/2,videoOriginHeight/2,top-2,top-2);
+>>>>>>> origin/master
+
+  } else if (delayForm == FORM_MASK_CENTER_RECT) {
+        mask.rectMode(CENTER);
+        mask.fill(255);
+        mask.rect(videoOriginWidth/2,videoOriginHeight/2,rowSize+top,rowSize+top);
+        mask.fill(0);
+        mask.rect(videoOriginWidth/2,videoOriginHeight/2,top-2,top-2);
+  }
+        mask.endDraw();
+        frameImage.mask( mask.get() );
 
 	return frameImage;
 
