@@ -70,10 +70,10 @@ int depthPercent = 100;
 boolean mirror = true;
 int rowSize = 20; // h\u00f6he einer reihe
 int frameDelayStep = 1; // frame verz\u00f6gerung pro reihe
-int currentInput = INPUT_INTERN;
+int currentInput = INPUT_KINECT;
 int delayForm = FORM_BOTTOM; 
 
-boolean measureDepth = false;
+boolean measureDepth = true;
 
 
 public void setup() {
@@ -148,7 +148,7 @@ public void setup() {
 	
 }
 
-public boolean sketchFullScreen() { return true; }
+public boolean sketchFullScreen() { return false; }
 
 
 
@@ -188,6 +188,9 @@ public void draw() {
 		drawImage();	
 
 	popMatrix();
+
+
+	image(context.depthImage(), 0, 0);
 
 	frameNumber++;
 	
@@ -397,7 +400,7 @@ public void updateDepth() {
 
     depthPercent = PApplet.parseInt(map(nearest, minDepth, maxDepth, 100, 10));
 
-    // println(nearest);
+    println("Nearest Point: "+nearest);
     // println(depthPercent);
 
     /**

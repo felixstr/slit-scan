@@ -50,10 +50,10 @@ int depthPercent = 100;
 boolean mirror = true;
 int rowSize = 20; // höhe einer reihe
 int frameDelayStep = 1; // frame verzögerung pro reihe
-int currentInput = INPUT_INTERN;
+int currentInput = INPUT_LOGITECH;
 int delayForm = FORM_BOTTOM; 
 
-boolean measureDepth = false;
+boolean measureDepth = true;
 
 
 void setup() {
@@ -128,7 +128,7 @@ void setup() {
 	
 }
 
-boolean sketchFullScreen() { return true; }
+boolean sketchFullScreen() { return false; }
 
 
 
@@ -168,6 +168,9 @@ void draw() {
 		drawImage();	
 
 	popMatrix();
+
+
+	// image(context.depthImage(), 0, 0);
 
 	frameNumber++;
 	
@@ -377,7 +380,7 @@ void updateDepth() {
 
     depthPercent = int(map(nearest, minDepth, maxDepth, 100, 10));
 
-    // println(nearest);
+    println("Nearest Point: "+nearest);
     // println(depthPercent);
 
     /**
@@ -436,7 +439,7 @@ PImage mask(int frameDelay, int top) {
 */ 
 void bufferClean(int frameDelay) {
 	// int limitClean = (videoOutputHeight/rowSize)*frameDelayStep;
-	int limitClean = (videoOutputHeight/60)*5;
+	int limitClean = (videoOutputHeight/64)*5;
 
 
 	if (frameBuffer.get(frameDelay-limitClean) != null && frameNumber % 100 == 0) {
@@ -483,7 +486,7 @@ void updateSaturation(PImage frameImage, int saturationPercent) {
 
 
 void keyPressed() {
-	println(keyCode);
+	// println(keyCode);
 	switch (keyCode) {
 		case 32: 
 		 	myMovie.jump(0);
@@ -495,19 +498,19 @@ void keyPressed() {
 			myMovie.jump(myMovie.time()-7);
 			break;
 
-		case 49: 
+		case 49: // 1
 		 	delayForm = FORM_TOP;
 		 	break;
-		case 50: 
+		case 50: // 2
 			delayForm = FORM_BOTTOM;
 			break;
-		case 51: 
+		case 51: // 3
 			delayForm = FORM_HORIZONTAL_CENTER;
 			break;
-		case 52: 
+		case 52: // 4
 			delayForm = FORM_MASK_CENTER_ELLIPSE;
 			break;
-		case 53: 
+		case 53: // 5
 			delayForm = FORM_MASK_CENTER_RECT;
 			break;
 	}
