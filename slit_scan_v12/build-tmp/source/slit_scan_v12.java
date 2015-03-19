@@ -68,9 +68,9 @@ int depthPercent = 100;
 * KONFIGURATION
 */
 boolean mirror = true;
-int rowSize = 20; // h\u00f6he einer reihe
+int rowSize = 10; // h\u00f6he einer reihe
 int frameDelayStep = 1; // frame verz\u00f6gerung pro reihe
-int currentInput = INPUT_KINECT;
+int currentInput = INPUT_LOGITECH;
 int delayForm = FORM_BOTTOM; 
 
 boolean measureDepth = true;
@@ -139,6 +139,10 @@ public void setup() {
 	// windowHeight = 1960;
 	// windowWidth = 960;
 	// windowHeight = 540;
+	windowWidth = 1960*2;
+	windowHeight = 1080;
+	// windowWidth = 1960;
+	// windowHeight = 1080;
 
 	size(windowWidth, windowHeight, P2D);
 
@@ -156,7 +160,7 @@ public void draw() {
 	background(255);
 	// frame.setLocation(-2160,0); 
 	if (frameNumber < 20) {
-		frame.setLocation(0,0); 
+		frame.setLocation(-windowWidth, 0); 
 	}
 
 	// measureDepth
@@ -189,8 +193,9 @@ public void draw() {
 
 	popMatrix();
 
-
-	image(context.depthImage(), 0, 0);
+	PImage depthImage = context.depthImage();
+	// image(depthImage.get(0, 200, width, depthImage.height-200), 0, 0);
+	//image(depthImage, 0, 0);
 
 	frameNumber++;
 	
@@ -249,7 +254,7 @@ public void readFrame() {
 	bufferImage = bufferImage.get(PApplet.parseInt((videoOriginWidth - videoOutputWidth)/2) ,0, videoOutputWidth, videoOutputHeight);
 
 	// saturation abh\u00e4ngig von der distanz
-	updateSaturation(bufferImage, depthPercent);
+	// updateSaturation(bufferImage, depthPercent);
 
 	// bild in den buffer speichern
 	frameBuffer.put(frameNumber, bufferImage);
@@ -385,9 +390,12 @@ public void updateDepth() {
 	context.alternativeViewPointDepthToImage();
 
 	int[] depthMap = context.depthMap();
+	PImage depthImage = context.depthImage();
+	PImage depthImageCropped = depthImage.get(0, 500, width, depthImage.height-200);
+	// image(depthImage.get(0, 200, width, depthImage.height-200), 0, 0);
 	
 	int minDepth = 600;
-	int maxDepth = 3000;
+	int maxDepth = 5000;
 	int nearest = 0;
 
 	for(int x=0; x < depthMap.length; x++) {
@@ -398,6 +406,18 @@ public void updateDepth() {
    		}
     }
 
+ 	// for(int x=0; x < depthImageCropped.pixels.length; x++) {
+ 	// 	int brightness = int(brightness(depthImageCropped.pixels[x]));
+ 	// 	if (brightness < nearest) {
+  //  			nearest = brightness;
+  //  		}
+  //  		// if (depthMap[x] > minDepth && depthMap[x] < maxDepth) {
+  //  		// 	if (nearest == 0 || depthMap[x] < nearest) {
+  //  		// 		nearest = depthMap[x];
+  //  		// 	}
+  //  		// }
+  //   }
+
     depthPercent = PApplet.parseInt(map(nearest, minDepth, maxDepth, 100, 10));
 
     println("Nearest Point: "+nearest);
@@ -406,10 +426,10 @@ public void updateDepth() {
     /**
     * Konfiguration
     */
-    if (nearest < 1400) {
+    if (nearest < 2000) {
     	rowSize = 60;
 		frameDelayStep = 1;
-    } else if (nearest < 2200) {
+    } else if (nearest < 2800) {
     	rowSize = 30;
 		frameDelayStep = 1;
     } else {
@@ -459,7 +479,7 @@ public PImage mask(int frameDelay, int top) {
 */ 
 public void bufferClean(int frameDelay) {
 	// int limitClean = (videoOutputHeight/rowSize)*frameDelayStep;
-	int limitClean = (videoOutputHeight/60)*5;
+	int limitClean = (videoOutputHeight/64)*5;
 
 
 	if (frameBuffer.get(frameDelay-limitClean) != null && frameNumber % 100 == 0) {
@@ -506,7 +526,7 @@ public void updateSaturation(PImage frameImage, int saturationPercent) {
 
 
 public void keyPressed() {
-	println(keyCode);
+	// println(keyCode);
 	switch (keyCode) {
 		case 32: 
 		 	myMovie.jump(0);
@@ -518,19 +538,19 @@ public void keyPressed() {
 			myMovie.jump(myMovie.time()-7);
 			break;
 
-		case 49: 
+		case 49: // 1
 		 	delayForm = FORM_TOP;
 		 	break;
-		case 50: 
+		case 50: // 2
 			delayForm = FORM_BOTTOM;
 			break;
-		case 51: 
+		case 51: // 3
 			delayForm = FORM_HORIZONTAL_CENTER;
 			break;
-		case 52: 
+		case 52: // 4
 			delayForm = FORM_MASK_CENTER_ELLIPSE;
 			break;
-		case 53: 
+		case 53: // 5
 			delayForm = FORM_MASK_CENTER_RECT;
 			break;
 	}

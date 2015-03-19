@@ -48,7 +48,7 @@ int depthPercent = 100;
 * KONFIGURATION
 */
 boolean mirror = true;
-int rowSize = 20; // höhe einer reihe
+int rowSize = 10; // höhe einer reihe
 int frameDelayStep = 1; // frame verzögerung pro reihe
 int currentInput = INPUT_LOGITECH;
 int delayForm = FORM_BOTTOM; 
@@ -119,6 +119,10 @@ void setup() {
 	// windowHeight = 1960;
 	// windowWidth = 960;
 	// windowHeight = 540;
+	windowWidth = 1960*2;
+	windowHeight = 1080;
+	// windowWidth = 1960;
+	// windowHeight = 1080;
 
 	size(windowWidth, windowHeight, P2D);
 
@@ -136,7 +140,7 @@ void draw() {
 	background(255);
 	// frame.setLocation(-2160,0); 
 	if (frameNumber < 20) {
-		frame.setLocation(0,0); 
+		frame.setLocation(-windowWidth, 0); 
 	}
 
 	// measureDepth
@@ -169,8 +173,9 @@ void draw() {
 
 	popMatrix();
 
-
-	// image(context.depthImage(), 0, 0);
+	PImage depthImage = context.depthImage();
+	// image(depthImage.get(0, 200, width, depthImage.height-200), 0, 0);
+	//image(depthImage, 0, 0);
 
 	frameNumber++;
 	
@@ -229,7 +234,7 @@ void readFrame() {
 	bufferImage = bufferImage.get(int((videoOriginWidth - videoOutputWidth)/2) ,0, videoOutputWidth, videoOutputHeight);
 
 	// saturation abhängig von der distanz
-	updateSaturation(bufferImage, depthPercent);
+	// updateSaturation(bufferImage, depthPercent);
 
 	// bild in den buffer speichern
 	frameBuffer.put(frameNumber, bufferImage);
@@ -365,9 +370,12 @@ void updateDepth() {
 	context.alternativeViewPointDepthToImage();
 
 	int[] depthMap = context.depthMap();
+	PImage depthImage = context.depthImage();
+	PImage depthImageCropped = depthImage.get(0, 500, width, depthImage.height-200);
+	// image(depthImage.get(0, 200, width, depthImage.height-200), 0, 0);
 	
 	int minDepth = 600;
-	int maxDepth = 3000;
+	int maxDepth = 5000;
 	int nearest = 0;
 
 	for(int x=0; x < depthMap.length; x++) {
@@ -378,6 +386,18 @@ void updateDepth() {
    		}
     }
 
+ 	// for(int x=0; x < depthImageCropped.pixels.length; x++) {
+ 	// 	int brightness = int(brightness(depthImageCropped.pixels[x]));
+ 	// 	if (brightness < nearest) {
+  //  			nearest = brightness;
+  //  		}
+  //  		// if (depthMap[x] > minDepth && depthMap[x] < maxDepth) {
+  //  		// 	if (nearest == 0 || depthMap[x] < nearest) {
+  //  		// 		nearest = depthMap[x];
+  //  		// 	}
+  //  		// }
+  //   }
+
     depthPercent = int(map(nearest, minDepth, maxDepth, 100, 10));
 
     println("Nearest Point: "+nearest);
@@ -386,10 +406,10 @@ void updateDepth() {
     /**
     * Konfiguration
     */
-    if (nearest < 1400) {
+    if (nearest < 2000) {
     	rowSize = 60;
 		frameDelayStep = 1;
-    } else if (nearest < 2200) {
+    } else if (nearest < 2800) {
     	rowSize = 30;
 		frameDelayStep = 1;
     } else {
